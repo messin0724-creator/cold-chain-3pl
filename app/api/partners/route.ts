@@ -41,9 +41,15 @@ export async function POST(req: Request) {
     </table>
   `;
 
+  const toEmail = process.env.TO_EMAIL;
+  if (!toEmail) {
+    console.error('Resend error', 'TO_EMAIL env var is not set');
+    return NextResponse.json({ ok: false, error: 'TO_EMAIL env var is not set' }, { status: 500 });
+  }
+
   const { error } = await resend.emails.send({
     from: 'onboarding@resend.dev',
-    to: process.env.TO_EMAIL ?? '',
+    to: toEmail,
     subject: `[ColdMatch] 파트너 등록 신청 — ${body.companyName}`,
     html,
   });
