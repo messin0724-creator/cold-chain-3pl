@@ -1,36 +1,56 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
 
-const DB_PATH = path.join(process.cwd(), 'data', 'partner-applications.json');
-
-async function readApplications(): Promise<unknown[]> {
-  try {
-    const raw = await fs.readFile(DB_PATH, 'utf-8');
-    return JSON.parse(raw) as unknown[];
-  } catch {
-    return [];
-  }
+interface PartnerBody {
+  companyName: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  region: string;
+  tempZones: string[];
+  totalCapacity: number;
+  availableCapacity: number;
+  ratePerPallet: number;
+  notes?: string;
 }
+
+const TEMP_LABEL: Record<string, string> = {
+  frozen: '냉동 (-18°C 이하)',
+  chilled: '냉장 (0~10°C)',
+  ambient: '상온 (15~25°C)',
+};
 
 export async function POST(req: Request) {
-  const body: unknown = await req.json();
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const body = (await req.json()) as PartnerBody;
 
-  const applications = await readApplications();
-  const entry = {
-    id: `partner_${Date.now()}`,
-    submittedAt: new Date().toISOString(),
-    ...(body as object),
-  };
-  applications.push(entry);
+  const html = `
+    <h2>새 파트너 등록 신청</h2>
+    <table cellpadding="8" style="border-collapse:collapse;width:100%;max-width:600px">
+      <tr><td><b>회사명</b></td><td>${body.companyName}</td></tr>
+      <tr><td><b>담당자</b></td><td>${body.contactName}</td></tr>
+      <tr><td><b>이메일</b></td><td>${body.contactEmail}</td></tr>
+      <tr><td><b>연락처</b></td><td>${body.contactPhone}</td></tr>
+      <tr><td><b>지역</b></td><td>${body.region}</td></tr>
+      <tr><td><b>온도 조건</b></td><td>${body.tempZones.map((z) => TEMP_LABEL[z] ?? z).join(', ')}</td></tr>
+      <tr><td><b>총 용량</b></td><td>${body.totalCapacity.toLocaleString()} 팔레트</td></tr>
+      <tr><td><b>가용 용량</b></td><td>${body.availableCapacity.toLocaleString()} 팔레트</td></tr>
+      <tr><td><b>팔레트 단가</b></td><td>${body.ratePerPallet.toLocaleString()}원/월</td></tr>
+      ${body.notes ? `<tr><td><b>메모</b></td><td>${body.notes}</td></tr>` : ''}
+      <tr><td><b>신청 시각</b></td><td>${new Date().toLocaleString('ko-KR')}</td></tr>
+    </table>
+  `;
 
-  await fs.mkdir(path.dirname(DB_PATH), { recursive: true });
-  await fs.writeFile(DB_PATH, JSON.stringify(applications, null, 2), 'utf-8');
+  const { error } = await resend.emails.send({
+    from: 'ColdMatch <onboarding@resend.dev>',
+    to: process.env.TO_EMAIL ?? '',
+    subject: `[ColdMatch] 파트너 등록 신청 — ${body.companyName}`,
+    html,
+  });
 
-  return NextResponse.json({ ok: true, id: entry.id }, { status: 201 });
-}
+  if (error) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
 
-export async function GET() {
-  const applications = await readApplications();
-  return NextResponse.json(applications);
+  return NextResponse.json({ ok: true }, { status: 201 });
 }
