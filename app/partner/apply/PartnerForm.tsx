@@ -102,12 +102,21 @@ export default function PartnerForm() {
         <p className="text-green-700 text-sm">
           입력하신 정보를 검토 후 영업일 2일 내 이메일로 연락드리겠습니다.
         </p>
-        <button
-          onClick={() => { setForm(INITIAL); setStatus('idle'); }}
-          className="mt-2 px-6 py-2 border border-green-300 text-green-700 rounded-xl text-sm hover:bg-green-100 transition-colors"
-        >
-          다시 입력하기
-        </button>
+        <div className="mt-2 flex flex-col sm:flex-row gap-2 w-full justify-center">
+          <a href="/"
+            className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-xl text-sm hover:bg-blue-700 transition-colors text-center">
+            홈으로
+          </a>
+          <a href="mailto:partner@coldmatch.io"
+            className="px-6 py-2 border border-green-300 text-green-700 rounded-xl text-sm hover:bg-green-100 transition-colors text-center">
+            추가 문의하기
+          </a>
+          <button
+            onClick={() => { setForm(INITIAL); setStatus('idle'); }}
+            className="px-6 py-2 border border-gray-200 text-gray-500 rounded-xl text-sm hover:bg-gray-50 transition-colors">
+            다시 입력하기
+          </button>
+        </div>
       </div>
     );
   }
