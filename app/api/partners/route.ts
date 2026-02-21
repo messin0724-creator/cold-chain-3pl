@@ -42,7 +42,7 @@ export async function POST(req: Request) {
   `;
 
   const { error } = await resend.emails.send({
-    from: 'ColdMatch <onboarding@resend.dev>',
+    from: 'onboarding@resend.dev',
     to: process.env.TO_EMAIL ?? '',
     subject: `[ColdMatch] 파트너 등록 신청 — ${body.companyName}`,
     html,
