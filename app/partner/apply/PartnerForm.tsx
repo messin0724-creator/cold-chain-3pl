@@ -107,7 +107,8 @@ export default function PartnerForm() {
             className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-xl text-sm hover:bg-blue-700 transition-colors text-center">
             홈으로
           </a>
-          <a href="mailto:partner@coldmatch.io"
+          <a href="https://open.kakao.com/o/sGpX6o3g"
+            target="_blank" rel="noopener noreferrer"
             className="px-6 py-2 border border-green-300 text-green-700 rounded-xl text-sm hover:bg-green-100 transition-colors text-center">
             추가 문의하기
           </a>
