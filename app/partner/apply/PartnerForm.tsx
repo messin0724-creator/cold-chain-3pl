@@ -44,6 +44,7 @@ export default function PartnerForm() {
   const [form, setForm] = useState<FormState>(INITIAL);
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [apiErrorMessage, setApiErrorMessage] = useState<string>('');
 
   function toggleTempZone(value: string) {
     setForm((prev) => ({
@@ -84,9 +85,11 @@ export default function PartnerForm() {
           ratePerPallet: Number(form.ratePerPallet),
         }),
       });
-      if (!res.ok) throw new Error();
+      const data = await res.json() as { ok: boolean; error?: string };
+      if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
       setStatus('success');
-    } catch {
+    } catch (err) {
+      setApiErrorMessage(err instanceof Error ? err.message : 'Unknown error');
       setStatus('error');
     }
   }
@@ -218,7 +221,7 @@ export default function PartnerForm() {
       </Field>
 
       {status === 'error' && (
-        <p className="text-sm text-red-500 text-center">제출 중 오류가 발생했습니다. 다시 시도해주세요.</p>
+        <p className="text-sm text-red-500 text-center">오류: {apiErrorMessage}</p>
       )}
 
       <button type="submit" disabled={status === 'loading'}
